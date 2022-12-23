@@ -16,10 +16,12 @@ async def open_lk(call: CallbackQuery):
 # Открытие меню CRUD в панели администратора
 @dp.callback_query_handler(text='CRUD')
 async def open_crud_menu(call: CallbackQuery):
+    await call.answer()
     await bot.send_message(call.from_user.id, f"С чем будем работать, шеф?", reply_markup=crud_markup)
 
 
 # Открытие меню Команда в панели администратора
 @dp.callback_query_handler(text='team')
 async def open_crud_menu(call: CallbackQuery):
+    await call.answer()
     await bot.send_message(call.from_user.id, f"Меню управления командой", reply_markup=team_markup)

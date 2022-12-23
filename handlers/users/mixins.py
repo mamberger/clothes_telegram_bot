@@ -83,10 +83,6 @@ def get_model_markup(callback, model):
                                                     callback_data=f'{model}-{obj["id"]}-{callback}'))
         # добавление кнопок пагинации
         len_big_data, len_data = len(split_data), len(data)
-        if len_big_data == 1:
-            len_data += 1
-        if len_data == 1:
-            len_big_data += 1
 
         if i >= 1:
             navigation.append(types.InlineKeyboardButton(text=f'⬅️',

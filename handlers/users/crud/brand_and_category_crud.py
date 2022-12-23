@@ -15,12 +15,14 @@ from states import states
 
 @dp.callback_query_handler(text="CATEGORY")
 async def category_crud_menu(call: CallbackQuery):
+    await call.answer()
     await bot.send_message(call.from_user.id, f"Выберите операцию", reply_markup=get_crud_menu('CATEGORY'))
 
 
 # Круд меню для брэнда
 @dp.callback_query_handler(text="BRAND")
 async def category_crud_menu(call: CallbackQuery):
+    await call.answer()
     await bot.send_message(call.from_user.id, f"Выберите операцию", reply_markup=get_crud_menu('BRAND'))
 
 
@@ -40,6 +42,7 @@ async def read(call, model):
 
 @dp.callback_query_handler(text_contains='_read')
 async def object_read(call: CallbackQuery):
+    await call.answer()
     split_callback = call.data.split('_')
     if not split_callback[0] == 'ITEM':
         await read(call, split_callback[0].lower())
@@ -67,6 +70,7 @@ async def create(message: types.Message, state: FSMContext, model, title):
 # хендлеры CREATE для category и brand
 @dp.callback_query_handler(text='CATEGORY_create')
 async def category_create(call: CallbackQuery):
+    await call.answer()
     await bot.send_message(call.from_user.id, "Отправьте название нового объекта")
     await states.Create.CrudCategoryTitle.set()
 
@@ -78,6 +82,7 @@ async def category_create_title(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(text='BRAND_create')
 async def brand_create(call: CallbackQuery):
+    await call.answer()
     await bot.send_message(call.from_user.id, "Отправьте название нового объекта")
     await states.Create.CrudBrandTitle.set()
 

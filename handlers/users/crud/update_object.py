@@ -9,6 +9,7 @@ from states import states
 
 @dp.callback_query_handler(text_contains='_update')
 async def update_ask_id(call: types.CallbackQuery, state: FSMContext):
+    await call.answer()
     await state.update_data(model=call.data.split('_')[0].lower())
     await bot.send_message(call.from_user.id, f"Введите ID нужного объекта", reply_markup=cancel_markup)
     await states.Update.Id.set()

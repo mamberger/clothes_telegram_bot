@@ -10,6 +10,7 @@ from states import states
 # Хендлеры создания нового админа
 @dp.callback_query_handler(text='add_admin')
 async def add_admin_ask_id(call: CallbackQuery):
+    await call.answer()
     await bot.send_message(call.from_user.id, 'Отправь ID нового админа')
     await states.Team.Add.set()
 
@@ -32,6 +33,7 @@ async def add_admin(message: types.Message, state: FSMContext):
 # Хендлер показа списка всех админов
 @dp.callback_query_handler(text='admin_list')
 async def admin_list_view(call: CallbackQuery):
+    await call.answer()
     text = get_admin_list_text()
     await bot.send_message(call.from_user.id, text)
 
@@ -39,6 +41,7 @@ async def admin_list_view(call: CallbackQuery):
 # Хендлеры удаления админа
 @dp.callback_query_handler(text='delete_admin')
 async def delete_admin_ask_id(call: CallbackQuery):
+    await call.answer()
     await bot.send_message(call.from_user.id, 'Введите ID админа, которого хотите лишить прав.')
     await states.Team.Delete.set()
 

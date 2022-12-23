@@ -25,14 +25,17 @@ async def send_item_card(call, item, url, sent_messages, nav_and_fav=False,
                          i=None, next_url=None, previous_url=None, query_len=None):
     if not nav_and_fav:
         markup = types.InlineKeyboardMarkup(inline_keyboard=[])
-    item_card = f"{item['title']}\n\n" \
-                f"Артикул {item['id']}\n" \
-                f"Пол: {item['gender']}\n" \
-                f"Качество: {item['quality']}\n" \
-                f"Категория: {refactor_related_data(item['category'])}\n" \
-                f"Брэнд: {refactor_related_data(item['brand'])}\n\n" \
-                f"{item['description']}\n\n" \
-                f"{item['price']} ₽"
+    try:
+        item_card = f"{item['title']}\n\n" \
+                    f"Артикул {item['id']}\n" \
+                    f"Пол: {item['gender']}\n" \
+                    f"Качество: {item['quality']}\n" \
+                    f"Категория: {refactor_related_data(item['category'])}\n" \
+                    f"Брэнд: {refactor_related_data(item['brand'])}\n\n" \
+                    f"{item['description']}\n\n" \
+                    f"{item['price']} ₽"
+    except KeyError:
+        return await bot.send_message(call.from_user.id, "Объект не найден")
     # формируем кнопку "добавить в избранное" или удаления из избранного
     # в зависимости от того, в каком контексте используется функция
     # если пользователь просматривает свои избранные, то в url будет фильтр subscribers

@@ -16,12 +16,13 @@ cd_create_item = CallbackData("cd_create_item", "data")
 # позволяет просмотреть, удалить, создать, редактировать айтемы
 @dp.callback_query_handler(text='ITEM')
 async def open_item_crud_menu(call: types.CallbackQuery):
+    await call.answer()
     await bot.send_message(call.from_user.id, f'Выберите операцию', reply_markup=get_crud_menu('ITEM'))
 
 
 @dp.callback_query_handler(text='ITEM_create')
 async def item_create_title(call: types.CallbackQuery):
-    # check_or_create_template(call.from_user.id)
+    await call.answer()
     await bot.send_message(call.from_user.id, 'Отправьте название товара', reply_markup=cancel_markup)
     await states.ItemCreate.Title.set()
 

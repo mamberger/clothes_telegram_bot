@@ -14,6 +14,7 @@ cd_delete = CallbackData("del_cd", "pk", "model")
 
 @dp.callback_query_handler(text_contains="_delete")
 async def delete_ask_pk(call: types.CallbackQuery, state: FSMContext):
+    await call.answer()
     model = call.data.split('_')[0].lower()
     await bot.send_message(call.from_user.id, f'Отправьте ID Объекта, который хотите удалить.')
     await states.Delete.Object.set()

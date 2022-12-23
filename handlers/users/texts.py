@@ -35,6 +35,7 @@ async def get_contacts_text(message: types.Message, state: FSMContext):
 # Управление текстами (из админского кабинета)
 @dp.callback_query_handler(text='texts')
 async def texts_menu(call: types.CallbackQuery):
+    await call.answer()
     markup = types.InlineKeyboardMarkup(
         inline_keyboard=[
             [types.InlineKeyboardButton(text='FAQ',
@@ -48,6 +49,7 @@ async def texts_menu(call: types.CallbackQuery):
 
 @dp.callback_query_handler(texts_cd.filter())
 async def texts_update_ask(call: types.CallbackQuery, callback_data: dict, state: FSMContext):
+    await call.answer()
     await state.update_data(text_name=callback_data.get('text'))
     await bot.send_message(call.from_user.id, f"Отправьте новый текст", reply_markup=cancel_markup)
     await states.states.Update.Text.set()

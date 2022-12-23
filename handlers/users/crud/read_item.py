@@ -9,6 +9,7 @@ from loader import bot, dp
 
 
 async def find_item(call):
+    await call.answer()
     await bot.send_message(call.from_user.id, f"Введите ID товара, который хотите просмотреть")
     await states.states.ReadItem.Id.set()
 
