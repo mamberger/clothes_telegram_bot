@@ -9,6 +9,7 @@ from handlers.users.mixins import get_queryset, refactor_related_data, mess_dele
     get_item_card_markup, create_navigation_block
 from keyboards.inline.callback_data import filter_cd
 from loader import dp, bot
+from utils.decorators import filter_value_validation
 
 add_to_fav_cd = CallbackData('prefix', 'item_id', "previous_message")
 remove_from_fav_cd = CallbackData('cd_prefix', 'item_id', "previous_message")
@@ -94,22 +95,25 @@ async def send_item_card(call, item, url, sent_messages, nav_and_fav=False,
 
 # хендлер отображения товаров
 @dp.callback_query_handler(filter_cd.filter(model='category'))
-async def store_view(call, state: FSMContext, url=None):
-    print(await state.get_data())
-    return 0
+@filter_value_validation
+async def store_view(call, callback_data: dict, state: FSMContext, url=None):
+    state_data = await state.get_data()
+    filter_data = state_data['filter_params']
     # Удаляем предыдущее сообщение
-    await mess_delete(state, call.from_user.id)
+    #     # await mess_delete(state, call.from_user.id)
     sent_messages, chat_id = [], 0
     # Если юрл не передан, формируем его.
     if not url:
         #  Опеределяем передан набор фильтров для формирования url или уже готовый url
-        if call.data.find('category-') >= 0:
-            callback = call.data.replace('category-', '')
-            url_filters = callback.split('-')
-            url = API_CORE + f'item/?quality={url_filters[2]}&brand={url_filters[1]}&category={url_filters[0]}'
-            if int(url_filters[-1]):
-                url += f"&gender={url_filters[-1]}"
-            print(url_filters)
+        if callback_data.get('category', None):
+            quality = filter_data.get('quality')
+            gender = filter_data.get('gender')
+            category = filter_data.get('category')
+            brand = filter_data.get('brand')
+
+            url = API_CORE + f'item/?quality={quality}&brand={brand}&category={category}'
+            if int(gender):
+                url += f"&gender={gender}"
         # в ином случае url для запроса уже сформирован в нашем callback, вытаскиваем его
         else:
             url = call.data.replace('pag=', API_CORE)

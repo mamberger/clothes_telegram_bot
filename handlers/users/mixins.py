@@ -1,5 +1,4 @@
 import requests
-from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from aiogram.utils.exceptions import MessageToDeleteNotFound
@@ -42,10 +41,13 @@ class AlbumMiddleware(BaseMiddleware):
 
 
 # Запрос выборки по модели или конкретному url
-def get_queryset(model, custom_url=False):
-    url = API_CORE + f'{model}/'
+def get_queryset(model=None, custom_url=False):
+    url = API_CORE
+    if model:
+        url = API_CORE + f'{model}/'
     if custom_url:
         url = custom_url
+    print(url)
     response = requests.get(url=url)
     data = response.json()
     return data
