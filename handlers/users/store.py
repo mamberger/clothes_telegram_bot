@@ -7,6 +7,7 @@ from aiogram.utils.exceptions import BadRequest
 from data.config import API_CORE
 from handlers.users.mixins import get_queryset, refactor_related_data, mess_delete, \
     get_item_card_markup, create_navigation_block
+from keyboards.inline.callback_data import filter_cd
 from loader import dp, bot
 
 add_to_fav_cd = CallbackData('prefix', 'item_id', "previous_message")
@@ -92,8 +93,10 @@ async def send_item_card(call, item, url, sent_messages, nav_and_fav=False,
 
 
 # хендлер отображения товаров
-@dp.callback_query_handler(text_contains='category-')
+@dp.callback_query_handler(filter_cd.filter(model='category'))
 async def store_view(call, state: FSMContext, url=None):
+    print(await state.get_data())
+    return 0
     # Удаляем предыдущее сообщение
     await mess_delete(state, call.from_user.id)
     sent_messages, chat_id = [], 0

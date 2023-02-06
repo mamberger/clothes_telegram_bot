@@ -1,22 +1,20 @@
-import asyncio
-from typing import Union
-
 import requests
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.handler import CancelHandler
-from aiogram.dispatcher.middlewares import BaseMiddleware
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from aiogram.utils.callback_data import CallbackData
+
 from aiogram.utils.exceptions import MessageToDeleteNotFound
 
 from data.config import API_CORE, user, password
+from keyboards.inline.callback_data import update_cd
 from loader import bot
+import asyncio
+from typing import Union
+from aiogram import types
+from aiogram.dispatcher.middlewares import BaseMiddleware
+from aiogram.dispatcher.handler import CancelHandler
 
-update_cd = CallbackData('prefix', 'field')
 
-
-# Класс для создания хендлеров, способных принимать альбом фотографий
+# для принёма альбома фотографий в одном хендлере
 class AlbumMiddleware(BaseMiddleware):
     album_data: dict = {}
 
@@ -39,7 +37,6 @@ class AlbumMiddleware(BaseMiddleware):
             data["album"] = self.album_data[message.media_group_id]
 
     async def on_post_process_message(self, message: types.Message, result: dict, data: dict):
-        """Clean up after handling our album."""
         if message.media_group_id and message.conf.get("is_last"):
             del self.album_data[message.media_group_id]
 
@@ -49,53 +46,9 @@ def get_queryset(model, custom_url=False):
     url = API_CORE + f'{model}/'
     if custom_url:
         url = custom_url
-    print(url)
     response = requests.get(url=url)
     data = response.json()
     return data
-
-
-# разделение списков для get_model_markup()
-def split_list(data, pag):
-    res = []
-    i = 0
-    while True:
-        if data[i:i + pag]:
-            res.append(data[i:i + pag])
-            i += pag
-        else:
-            break
-    return res
-
-
-# Создание клавиатуры для фильтров по связанным моделям
-def get_model_markup(callback, model):
-    pagination = 3
-    data = get_queryset(model)
-    split_data = split_list(data, pagination)
-    res = {}
-    i = 0
-    for data in split_data:
-        query = []
-        navigation = []
-        for obj in data:
-            query.append(types.InlineKeyboardButton(text=f'{obj["title"]}',
-                                                    callback_data=f'{model}-{obj["id"]}-{callback}'))
-        # добавление кнопок пагинации
-        len_big_data, len_data = len(split_data), len(data)
-
-        if i >= 1:
-            navigation.append(types.InlineKeyboardButton(text=f'⬅️',
-                                                         callback_data=f'{model[:-1]}_page={i - 1}={callback}'))
-
-        if split_data.index(data) != len_big_data - 1:
-            navigation.append(types.InlineKeyboardButton(text=f'➡️',
-                                                         callback_data=f'{model[:-1]}_page={i + 1}={callback}'))
-
-        model_markup = types.InlineKeyboardMarkup(row_width=1, inline_keyboard=[query, navigation])
-        res[i] = model_markup
-        i += 1
-    return res
 
 
 def refactor_related_data(data):
@@ -294,7 +247,7 @@ def get_model_fields_markup(pk, model):
     if not response.json():
         return 0
     buttons = []
-    for field, value in response.json().items():
+    for field, value in response.json().models():
         if field == 'id':
             continue
         buttons.append([types.InlineKeyboardButton(text=f'{field}',
@@ -346,11 +299,9 @@ def delete_admin(telegram_id):
 def update_model(data: dict):
     try:
         data_dict = {data['field']: data['value']}
-        print(data_dict)
         url = API_CORE + f"{data['model']}/{data['id']}/"
         response = requests.patch(url=url, data=data_dict)
-        print(response.status_code)
-        print(response.json())
+
         if response.status_code != 200:
             return 0
         if response.json()[data['field']] == data['value']:
@@ -403,17 +354,6 @@ async def create_navigation_block(call, next_url, previous_url, sent_messages):
         mess = await bot.send_message(call.from_user.id, f"Используйте стрелки для перехода по страницам",
                                       reply_markup=nav_markup)
         sent_messages.append(mess.message_id)
-
-
-def get_gender_markup(callback, quality):
-    m = InlineKeyboardButton(text='Мужской', callback_data=callback.new(gender=1, quality=quality))
-    w = InlineKeyboardButton(text='Женский', callback_data=callback.new(gender=2, quality=quality))
-    all_genders = InlineKeyboardButton(text='Унисекс', callback_data=callback.new(gender=3, quality=quality))
-    skip = InlineKeyboardButton(text='Пропустить', callback_data=callback.new(gender=0, quality=quality))
-
-    gender_markup = InlineKeyboardMarkup()
-    gender_markup.insert(m).insert(w).insert(all_genders).insert(skip)
-    return gender_markup
 
 
 def get_telegram_text(name):

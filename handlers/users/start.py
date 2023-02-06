@@ -6,6 +6,7 @@ from aiogram.dispatcher.filters.builtin import CommandStart
 from handlers.users.mixins import mess_delete, create_telegram_user
 from keyboards.default.client_base import base_markup
 from loader import dp, bot
+from utils.markup_creator import APIModelMarkupCreator
 
 
 @dp.message_handler(CommandStart())
