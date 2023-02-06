@@ -249,8 +249,9 @@ def get_model_fields_markup(pk, model):
     if not response.json():
         return 0
     buttons = []
-    for field, value in response.json().models():
-        if field == 'id':
+    print(response.json())
+    for field, value in response.json().items():
+        if field == 'id' or field == 'subscribers':
             continue
         buttons.append([types.InlineKeyboardButton(text=f'{field}',
                                                    callback_data=update_cd.new(field=field))])
@@ -295,21 +296,6 @@ def delete_admin(telegram_id):
         if response.status_code == 200:
             if not response.json()['is_staff']:
                 return 1
-    return 0
-
-
-def update_model(data: dict):
-    try:
-        data_dict = {data['field']: data['value']}
-        url = API_CORE + f"{data['model']}/{data['id']}/"
-        response = requests.patch(url=url, data=data_dict)
-
-        if response.status_code != 200:
-            return 0
-        if response.json()[data['field']] == data['value']:
-            return 1
-    except KeyError:
-        pass
     return 0
 
 

@@ -1,10 +1,19 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from handlers.users.mixins import get_model_fields_markup, update_cd, update_model
+from handlers.users.mixins import get_model_fields_markup, update_cd
 from keyboards.inline.store_buttons import cancel_markup
 from loader import dp, bot
 from states import states
+from utils.api import API
+
+
+async def execute_with_saving_state_data(func, state):
+    state_data = await state.get_data()
+    await func()
+    await state.set_data(state_data)
+
+    return state_data
 
 
 @dp.callback_query_handler(text_contains='_update')
@@ -22,9 +31,13 @@ async def update_ask_field(message: types.Message, state: FSMContext):
     except ValueError:
         return await bot.send_message(message.from_user.id, f"Неверный формат ID. Введите ID с помощью цифр.",
                                       reply_markup=cancel_markup)
+
     await state.update_data(id=message.text)
-    data = await state.get_data()
-    markup = get_model_fields_markup(message.text, data['model'])
+    state_data = await execute_with_saving_state_data(
+        state.reset_state, state
+    )
+
+    markup = get_model_fields_markup(message.text, state_data['model'])
     if not markup:
         return await bot.send_message(message.from_user.id, f"Ошибка. Проверьте правильность введенного ID.",
                                       reply_markup=cancel_markup)
@@ -32,15 +45,12 @@ async def update_ask_field(message: types.Message, state: FSMContext):
                            reply_markup=markup)
 
 
-@dp.callback_query_handler(update_cd.filter(), state=states.Update.Id)
+@dp.callback_query_handler(update_cd.filter())
 async def update_ask_value(call: types.CallbackQuery, callback_data: dict, state: FSMContext):
     await state.update_data(field=callback_data.get('field'))
-    if callback_data.get('field') == 'media_group':
-        await bot.send_message(call.from_user.id, f'Отправьте фотографии (не более 9шт).',
-                               reply_markup=cancel_markup)
-        await state.update_data(preview=False)
-        await states.ItemCreate.Media_group.set()
-    else:
+    field = callback_data.get('field')
+
+    if field == 'brand' or field == 'category':
         await bot.send_message(call.from_user.id, f"СПРАВКА\n"
                                                   f"При редактировании связующих полей(например брэнд или категория)"
                                                   f" в качестве значения передавайте ID"
@@ -49,9 +59,22 @@ async def update_ask_value(call: types.CallbackQuery, callback_data: dict, state
                                                   f" Тогда <b>сначала</b> напечатайте !список!\n"
                                                   f" После чего введите значения через запятые.\n"
                                                   f"<b>Пример</b>: !список! 15, 6, 3")
+
+    if field == 'media_group':
+        await bot.send_message(call.from_user.id, f'Отправьте фотографии (не более 9шт).',
+                               reply_markup=cancel_markup)
+        await state.update_data(preview=False)
+        await execute_with_saving_state_data(
+            states.ItemCreate.Media_group.set,
+            state
+        )
+    else:
         await bot.send_message(call.from_user.id, f"Введите новое значение для выбранного поля.",
                                reply_markup=cancel_markup)
-        await states.Update.Value.set()
+        await execute_with_saving_state_data(
+            states.Update.Value.set,
+            state
+        )
 
 
 @dp.message_handler(state=states.Update.Value)
@@ -67,9 +90,13 @@ async def update_save_changes(message: types.Message, state: FSMContext, third_p
     except AttributeError:
         pass
     await state.update_data(value=value)
-    data = await state.get_data()
-    await state.reset_state()
-    if update_model(data):
+
+    data = await execute_with_saving_state_data(
+        state.reset_state,
+        state
+    )
+
+    if API.update_model(data):
         return await bot.send_message(message.from_user.id, f"Объект успешно изменен.")
     markup = types.InlineKeyboardMarkup(
         inline_keyboard=[
@@ -86,4 +113,4 @@ async def update_save_changes(message: types.Message, state: FSMContext, third_p
 @dp.callback_query_handler(text='cancel', state=states.Update)
 async def cancel_wo_state(message: types.Message, state: FSMContext):
     await bot.send_message(message.from_user.id, 'Вы успешно отменили процесс редактирования Объекта.')
-    await state.reset_state()
+    await execute_with_saving_state_data(state.reset_state, state)
