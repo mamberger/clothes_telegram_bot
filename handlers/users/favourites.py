@@ -4,9 +4,10 @@ from aiogram.dispatcher import FSMContext
 from aiogram.utils.exceptions import MessageToDeleteNotFound
 
 from data.config import API_CORE
-from handlers.users.mixins import get_or_create_user, mess_delete
+from handlers.users.mixins import mess_delete
 from handlers.users.store import add_to_fav_cd, store_view, remove_from_fav_cd
 from loader import dp, bot
+from utils.api import APIClient as API
 
 
 # функция обновления списка избранных товаров
@@ -21,7 +22,7 @@ def update_favourites(telegram_id, item_id, delete=False):
     else:
         return 0
     # получаем информацию о юзере, если юзера нет, то создаем его
-    pk = get_or_create_user(telegram_id)
+    pk = API.get_or_create_user(telegram_id)
     if pk:
         # Обновляем список людей подписанных на наш товар (удаляем или добавляем текущего пользователя)
         if delete:
@@ -66,6 +67,6 @@ async def show_favourites(message: types.Message, state: FSMContext):
     data = await state.get_data()
     data['sent_messages'] = data['sent_messages'].append(message.message_id)
     await mess_delete(state, message.from_user.id)
-    pk = get_or_create_user(message.from_user.id)
+    pk = API.get_or_create_user(message.from_user.id)
     if pk:
         await store_view(message, state, API_CORE + f"item/?subscribers={pk}")

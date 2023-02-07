@@ -3,7 +3,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery
 
 from handlers.users.crud.update_object import execute_with_saving_state_data
-from handlers.users.mixins import add_new_admin, get_admin_list_text, delete_admin
+from utils.api import APIClient as API
 from keyboards.inline.store_buttons import cancel_markup
 from loader import dp, bot
 from states import states
@@ -29,7 +29,7 @@ async def add_admin(message: types.Message, state: FSMContext):
 
     await state.reset_state()
 
-    if add_new_admin(new_admin):
+    if API.add_new_admin(new_admin):
         return await bot.send_message(message.from_user.id, f'Юзер {new_admin} наш новый админ.')
     return await bot.send_message(message.from_user.id, f'Неудалось добавить админа.')
 
@@ -38,7 +38,7 @@ async def add_admin(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(text='admin_list')
 async def admin_list_view(call: CallbackQuery):
     await call.answer()
-    text = get_admin_list_text()
+    text = API.get_admin_list_text()
     await bot.send_message(call.from_user.id, text)
 
 
@@ -61,7 +61,7 @@ async def delete_admin_from_list(message: types.Message, state: FSMContext):
                                       reply_markup=cancel_markup)
 
     await state.reset_state()
-    if delete_admin(message.text):
+    if API.delete_admin(message.text):
         return await bot.send_message(message.from_user.id, f'С нами больше не работает.')
     return await bot.send_message(message.from_user.id, f'Неудалось удалить администратора.')
 

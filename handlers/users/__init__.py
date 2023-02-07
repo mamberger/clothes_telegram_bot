@@ -10,3 +10,4 @@ from .crud import create_item
 from . import team
 from . import favourites
 from . import texts
+from . import mailing

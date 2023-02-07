@@ -40,3 +40,8 @@ class Store(StatesGroup):
 class Team(StatesGroup):
     Add = State()
     Delete = State()
+
+
+class Mailing(StatesGroup):
+    SetPhotos = State()
+    SetText = State()

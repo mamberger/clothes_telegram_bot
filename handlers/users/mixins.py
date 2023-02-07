@@ -206,42 +206,6 @@ async def delete_model(call, pk, model):
         return await bot.send_message(call.from_user.id, 'Ошибка. Объект не был удален')
 
 
-def get_auth_token():
-    data = {
-        "username": user,
-        "password": password
-    }
-    response = requests.post(url=API_CORE + 'auth/', data=data)
-    result = 0
-    if response.status_code == 200:
-        result = response.json()['token']
-    return result
-
-
-def add_new_admin(telegram_id):
-    token = get_auth_token()
-    headers = {"Authorization": f"Token {token}"}
-    if token:
-        response = requests.get(url=API_CORE + f"telegram-user/?telegram_id={telegram_id}",
-                                headers=headers)
-        pk = 0
-        if response.status_code == 200:
-            if response.json():
-                pk = response.json()[0]['id']
-        if not pk:
-            response = requests.post(url=API_CORE + 'telegram-user/', headers=headers,
-                                     data={'telegram_id': telegram_id, "is_staff": True})
-            if response.status_code == 201:
-                return 1
-        else:
-            response = requests.patch(url=API_CORE + f"telegram-user/{pk}/",
-                                      headers=headers, data={"is_staff": True})
-            if response.status_code == 200:
-                if response.json()['is_staff']:
-                    return 1
-    return 0
-
-
 def get_model_fields_markup(pk, model):
     response = requests.get(url=API_CORE + f"{model}/{pk}/")
     if not response.status_code == 200:
@@ -249,7 +213,6 @@ def get_model_fields_markup(pk, model):
     if not response.json():
         return 0
     buttons = []
-    print(response.json())
     for field, value in response.json().items():
         if field == 'id' or field == 'subscribers':
             continue
@@ -257,71 +220,6 @@ def get_model_fields_markup(pk, model):
                                                    callback_data=update_cd.new(field=field))])
 
     return types.InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-def get_admin_list_text():
-    token = get_auth_token()
-    if token:
-        response = requests.get(url=API_CORE + 'telegram-user/?is_staff=1', headers={"Authorization": f"Token {token}"})
-        if response.status_code == 200:
-            data = response.json()
-            text = 'Список Админов\nID'
-            for admin in data:
-                text += f"\n{admin['telegram_id']}"
-            return text
-    return 0
-
-
-# аутентификация администратора
-def admin_auth(telegram_id):
-    token = get_auth_token()
-    response = requests.get(url=API_CORE + f'telegram-user/?telegram_id={telegram_id}&is_staff=1',
-                            headers={"Authorization": f"Token {token}"})
-    if response.status_code == 200:
-        return response.json()
-    return 0
-
-
-def delete_admin(telegram_id):
-    token = get_auth_token()
-    response = requests.get(url=API_CORE + f'telegram-user/?telegram_id={telegram_id}&is_staff=1',
-                            headers={"Authorization": f"Token {token}"})
-    if response.status_code == 200:
-        if not response.json():
-            return 0
-        pk = response.json()[0]['id']
-        response = requests.patch(url=API_CORE + f'telegram-user/{pk}/',
-                                  headers={"Authorization": f"Token {token}"},
-                                  data={'is_staff': False})
-        if response.status_code == 200:
-            if not response.json()['is_staff']:
-                return 1
-    return 0
-
-
-def create_telegram_user(telegram_id):
-    token = get_auth_token()
-    response = requests.post(API_CORE + "telegram-user/", headers={"Authorization": f"Token {token}"},
-                             data={"telegram_id": telegram_id})
-    if response.status_code == 201:
-        return response.json()['id']
-    return 0
-
-
-def get_or_create_user(telegram_id):
-    headers = {"Authorization": f"Token {get_auth_token()}"}
-    response = requests.get(url=API_CORE + f"telegram-user/?telegram_id={telegram_id}",
-                            headers=headers)
-    if response.status_code == 200:
-        if response.json():
-            pk = response.json()[0]['id']
-        else:
-            pk = create_telegram_user(telegram_id)
-            if not pk:
-                return 0
-    else:
-        return 0
-    return pk
 
 
 def get_item_card_markup(fav_button_title, fav_cd,
@@ -374,3 +272,36 @@ def update_telegram_text(name, content):
         if response.status_code == 201:
             return 1
     return 0
+
+
+class BaseAlbumManager:
+    @classmethod
+    def get_file_ids(cls, album) -> []:
+        raise NotImplementedError()
+
+
+class AlbumManager(BaseAlbumManager):
+    @classmethod
+    def get_file_ids(cls, album):
+        file_ids = []
+        if cls.is_album_valid(album):
+            if album:
+                for obj in album:
+                    if obj.photo:
+                        file_id = obj.photo[-1].file_id
+                    else:
+                        file_id = obj[obj.content_type].file_id
+                    try:
+                        file_ids.append(file_id)
+                    except ValueError:
+                        continue
+
+            return file_ids
+
+    @staticmethod
+    def is_album_valid(album):
+        if album:
+            for obj in album:
+                if not obj.photo:
+                    return False
+            return True

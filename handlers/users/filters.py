@@ -6,7 +6,7 @@ from handlers.users.mixins import mess_delete, get_queryset
 from keyboards.inline.callback_data import another_page_cd, filter_cd
 from keyboards.inline.store_buttons import quality_markup, quality_cd, gender_markup, gender_cd
 from loader import dp, bot
-from utils.api import API
+from utils.api import APIClient
 from utils.decorators import filter_value_validation
 from utils.markup_creator import APIModelMarkupCreator
 
@@ -53,7 +53,7 @@ async def gender_filter(call: CallbackQuery, callback_data: dict, state: FSMCont
     await mess_delete(state, call.from_user.id)
     state_data = await state.get_data()
 
-    endpoint_response = API.get_by_query_string(
+    endpoint_response = APIClient.get_by_query_string(
         'brand/', state_data['filter_params']
     )
 
@@ -69,7 +69,7 @@ async def category_filter(call: CallbackQuery, callback_data: dict, state: FSMCo
     await mess_delete(state, call.from_user.id)
     state_data = await state.get_data()
 
-    endpoint_response = API.get_by_query_string(
+    endpoint_response = APIClient.get_by_query_string(
         'category/', state_data['filter_params']
     )
     markup = await APIModelMarkupCreator('category', endpoint_response, state).get_markup()

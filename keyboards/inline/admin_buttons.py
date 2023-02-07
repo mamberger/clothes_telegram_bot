@@ -4,10 +4,11 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 crud = InlineKeyboardButton(text='Объекты', callback_data='CRUD')
 team = InlineKeyboardButton(text='Команда', callback_data='team')
 texts = InlineKeyboardButton(text='Тексты', callback_data='texts')
+message = InlineKeyboardButton(text='Рассылка', callback_data='mailing')
 
 
 lk_markup = InlineKeyboardMarkup()
-lk_markup.row(crud).row(team).row(texts)
+lk_markup.row(crud).row(team, texts).row(message)
 
 # CRUD menu
 category = InlineKeyboardButton(text='Категория', callback_data='CATEGORY')

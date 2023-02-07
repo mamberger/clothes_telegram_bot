@@ -5,7 +5,7 @@ from handlers.users.mixins import get_model_fields_markup, update_cd
 from keyboards.inline.store_buttons import cancel_markup
 from loader import dp, bot
 from states import states
-from utils.api import API
+from utils.api import APIClient
 
 
 async def execute_with_saving_state_data(func, state):
@@ -96,7 +96,7 @@ async def update_save_changes(message: types.Message, state: FSMContext, third_p
         state
     )
 
-    if API.update_model(data):
+    if APIClient.update_model(data):
         return await bot.send_message(message.from_user.id, f"Объект успешно изменен.")
     markup = types.InlineKeyboardMarkup(
         inline_keyboard=[
