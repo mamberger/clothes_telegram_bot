@@ -22,7 +22,7 @@ def filter_value_validation(func):
         current_filter_data = get_current_filter_data(callback_data)
         initial_filter_data = await get_initial_filter_data(state)
         filter_data = initial_filter_data | current_filter_data
-        print(filter_data)
+
         if APIClient.get_by_query_string('item/', filter_data)['results']:
             await state.update_data(filter_params={**filter_data})
             await func(call, callback_data, state)

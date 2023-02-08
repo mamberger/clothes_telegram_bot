@@ -5,6 +5,7 @@ from aiogram.utils.callback_data import CallbackData
 from handlers.users.crud.brand_and_category_crud import read
 from handlers.users.crud.update_object import update_save_changes
 from handlers.users.mixins import get_crud_menu, get_preview_data, send_template_to_api, create_media_group
+from keyboards.inline.admin_buttons import create_item_markup
 from keyboards.inline.store_buttons import cancel_markup, template_markup
 from loader import dp, bot
 from states import states
@@ -203,7 +204,6 @@ async def handle_albums(message: types.Message, state: FSMContext, album=None):
             media_group = types.MediaGroup()
             for photo in photos:
                 try:
-                    # We can also add a caption to each file by specifying `"caption": "text"`
                     media_group.attach({"media": photo, "type": content_type})
                 except ValueError:
                     pass
@@ -217,8 +217,15 @@ async def save_template(call: types.CallbackQuery, state: FSMContext):
     res = await send_template_to_api(state)
     await state.reset_state()
     if res:
-        return await bot.send_message(call.from_user.id, f"Товар успешно добавлен в базу под ID {res}")
-    await bot.send_message(call.from_user.id, f"Ошибка. Товар не был сохранен.")
+        return await bot.send_message(
+            call.from_user.id, f"Товар успешно добавлен в базу под ID {res}",
+            reply_markup=create_item_markup
+        )
+
+    await bot.send_message(
+        call.from_user.id, f"Ошибка. Товар не был сохранен.",
+        reply_markup=create_item_markup
+    )
 
 
 @dp.callback_query_handler(text='cancel', state=states.ItemCreate)

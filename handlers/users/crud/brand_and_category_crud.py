@@ -2,7 +2,7 @@ import requests
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery
-
+from utils.api import APIClient as API
 from data.config import API_CORE
 from handlers.users.crud.read_item import find_item
 from handlers.users.mixins import get_crud_menu, get_queryset
@@ -28,9 +28,9 @@ async def category_crud_menu(call: CallbackQuery):
 
 # функция для осуществления READ операции для моделей brand и category
 async def read(call, model):
-    qs = get_queryset(model)
+    response = API.get(f'{model}/')
+    qs = response['results']
     text = 'ID   Название\n'
-    print(qs)
     for element in qs:
         text += f"{element['id']}   {element['title']}\n"
     if len(text) > 4096:

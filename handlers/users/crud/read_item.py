@@ -20,7 +20,7 @@ async def show_item(message: types.Message, state: FSMContext):
         pk = int(message.text)
         url = API_CORE + f'item/{pk}/'
         data = get_queryset('item', custom_url=url)
-        await send_item_card(message, data, url, [])
+        await send_item_card(message.from_user.id, data)
         await state.reset_state()
     except ValueError:
         return await bot.send_message(message.from_user.id, 'Неверный формат ID. Передайте число.')

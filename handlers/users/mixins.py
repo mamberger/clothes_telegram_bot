@@ -3,8 +3,8 @@ from aiogram.dispatcher import FSMContext
 
 from aiogram.utils.exceptions import MessageToDeleteNotFound
 
-from data.config import API_CORE, user, password
-from keyboards.inline.callback_data import update_cd
+from data.config import API_CORE
+from keyboards.inline.callback_data import update_cd, store_nav_cd
 from loader import bot
 import asyncio
 from typing import Union
@@ -62,20 +62,6 @@ def refactor_related_data(data):
         else:
             res += f'{obj["title"]},'
     return res
-
-
-# Создание клавиатуры навигации. Переход к след. или пред. страницам выборки
-def create_store_navigation(next_data, previous_data):
-    navigation = []
-    if previous_data:
-        previous_data = previous_data.replace(API_CORE, 'pag=')
-        navigation.append(types.InlineKeyboardButton(text=f'⬅️',
-                                                     callback_data=previous_data))
-    if next_data:
-        next_data = next_data.replace(API_CORE, 'pag=')
-        navigation.append(types.InlineKeyboardButton(text=f'➡️',
-                                                     callback_data=next_data))
-    return types.InlineKeyboardMarkup(inline_keyboard=[navigation])
 
 
 # Функция изъятия данных о предыдущих сообщениях из state
@@ -179,7 +165,6 @@ def create_media_group(file_id_list):
 # Перенос шаблона товара в api
 async def send_template_to_api(state: FSMContext):
     data = await state.get_data()
-    print(data)
     photos = create_media_group(data['photos'])
     data = {
         "title": data['title'],
@@ -192,6 +177,7 @@ async def send_template_to_api(state: FSMContext):
         "media_group": photos
     }
     response = requests.post(url=API_CORE + 'item/', data=data)
+
     if response.status_code == 201:
         return response.json()['id']
     return False
@@ -223,7 +209,7 @@ def get_model_fields_markup(pk, model):
 
 
 def get_item_card_markup(fav_button_title, fav_cd,
-                         item_id: int, previous_message):
+                         item_id: int, previous_message=[]):
     favourites_button = [types.InlineKeyboardButton(text=fav_button_title,
                                                     callback_data=fav_cd.new(
                                                         item_id=item_id,
@@ -232,14 +218,6 @@ def get_item_card_markup(fav_button_title, fav_cd,
 
     markup = types.InlineKeyboardMarkup(inline_keyboard=[favourites_button])
     return markup
-
-
-async def create_navigation_block(call, next_url, previous_url, sent_messages):
-    nav_markup = create_store_navigation(next_url, previous_url)
-    if nav_markup['inline_keyboard'][0]:
-        mess = await bot.send_message(call.from_user.id, f"Используйте стрелки для перехода по страницам",
-                                      reply_markup=nav_markup)
-        sent_messages.append(mess.message_id)
 
 
 def get_telegram_text(name):

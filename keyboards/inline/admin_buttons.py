@@ -16,7 +16,7 @@ brand = InlineKeyboardButton(text='Брэнд', callback_data="BRAND")
 item = InlineKeyboardButton(text='Товар', callback_data='ITEM')
 
 crud_markup = InlineKeyboardMarkup()
-crud_markup.row(category, brand).row(item)
+crud_markup.row(item).row(category, brand)
 
 # Team menu
 add = InlineKeyboardButton(text='Добавить админа', callback_data='add_admin')
@@ -25,3 +25,9 @@ delete = InlineKeyboardButton(text='Удалить админа', callback_data=
 
 team_markup = InlineKeyboardMarkup()
 team_markup.row(add).row(admin_list).row(delete)
+
+# CREATE ONE MORE ITEM
+create = InlineKeyboardButton(text='Создать товар', callback_data='ITEM_create')
+
+create_item_markup = InlineKeyboardMarkup()
+create_item_markup.row(create)

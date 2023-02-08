@@ -1,6 +1,6 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-
+from utils.api import APIClient as API
 from handlers.users.mixins import AlbumManager
 from keyboards.inline.message_creation import photo_markup, send_markup
 from keyboards.inline.store_buttons import cancel_markup
@@ -35,7 +35,7 @@ async def handle_albums(message: types.Message, state: FSMContext, album=None):
         )
 
     await ask_text(message, state)
-    await state.update_data(message_template={'file_ids': file_ids})
+    await state.update_data(message_template={'photos': file_ids})
 
 
 @dp.callback_query_handler(text='skip-photo', state=states.Mailing)
@@ -55,10 +55,11 @@ async def set_text(message: types.Message, state: FSMContext):
     state_data = await state.get_data()
     state_data['message_template']['text'] = message.text
 
-    messenger = Messenger(
-        message.text, state_data['message_template'].get('file_ids', None)
+    recipient = [{'telegram_id': message.from_user.id}]
+
+    await Messenger.start_mailing(
+        [state_data['message_template']], recipient
     )
-    await messenger.mailing_dispatcher([{'telegram_id': message.from_user.id}])
 
     await bot.send_message(
         message.from_user.id, 'Сообщения выше - шаблон вашей рассылки.'
@@ -75,8 +76,8 @@ async def send_message_handler(message: types.Message, state: FSMContext):
     state_data = await state.get_data()
     state_data = state_data['message_template']
 
-    messenger = Messenger(state_data['text'], state_data.get('file_ids', None))
-    result = await messenger.start_mailing()
+    response = API.get('telegram-user/')
+    result = await Messenger.start_mailing([state_data], response)
 
     if result:
         return await bot.send_message(message.from_user.id, 'Рассылка успешно отправлена.')

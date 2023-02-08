@@ -5,45 +5,100 @@ from loader import bot
 from utils.api import APIClient
 
 
+class BaseChatHistory:
+    def __init__(self, chat_id):
+        self.chat_id = chat_id
+        self.messages = []
+
+    def __repr__(self):
+        return f'{self.__class__} chat {self.chat_id}'
+
+
+class UserChatHistory(BaseChatHistory):
+    pass
+
+
+class BaseChatHistoryManager:
+    chat_history = UserChatHistory
+
+    @classmethod
+    def get_chat_history(cls, chat_id, collection) -> BaseChatHistory:
+        raise NotImplementedError()
+
+
+class ChatHistoryManager(BaseChatHistoryManager):
+    @classmethod
+    def get_chat_history(cls, chat_id, collection: list):
+        for obj in collection:
+            print(obj)
+            if obj.chat_id == chat_id:
+                return obj
+
+        return cls.chat_history(chat_id)
+
+
 class BaseMessenger:
     Client = APIClient
 
-    def __init__(self, text, photos):
-        self.message_text = text
-        self.media_file_ids = photos
-
-    def start_mailing(self):
+    @classmethod
+    def start_mailing(cls, message_templates: list, users: list):
         raise NotImplementedError()
 
 
 class Messenger(BaseMessenger):
     base_headers = None
+    history_manager = ChatHistoryManager
 
-    async def start_mailing(self):
-        response = self.Client.get('telegram-user/')
-        return await self.mailing_dispatcher(response)
-
-    async def mailing_dispatcher(self, data):
-        """
-        Функция отправляющее сообщения всем пользователям в data
-        Принимает data (list). В формате:
-        [{'telegram_id': 11111}, ..., {'telegram_id': 2312551}]
-        """
-        if not data:
-            raise ValueError('Empty data param')
-
-        if not self.media_file_ids:
-            return await self.send_default_messages(data, self.message_text)
-
-        if len(self.media_file_ids) > 1:
-            media_group = self.get_media_group(self.media_file_ids)
-            return await self.send_media_group_messages(
-                data, self.message_text, media_group
+    @classmethod
+    async def start_mailing(cls, message_templates, users):
+        chat_histories = []
+        for template in message_templates:
+            chat_histories = await cls.mailing_dispatcher(
+                users, template['text'],
+                template.get('photos', []),
+                chat_histories,
+                template.get('markup', None),
             )
 
-        return await self.send_photo_messages(
-            data, self.message_text, self.media_file_ids[0]
-        )
+        return chat_histories
+
+    @classmethod
+    async def mailing_dispatcher(cls,
+                                 users,
+                                 message_text,
+                                 media_file_ids,
+                                 chat_histories,
+                                 markup=None):
+
+        """
+        Функция отправляющее сообщениt всем пользователям в users
+        Принимает users (list). В формате:
+        [{'telegram_id': 11111}, ..., {'telegram_id': 2312551}]
+        """
+
+        for user in users:
+            user_id = user['telegram_id']
+
+            chat_history = cls.history_manager.get_chat_history(user_id, chat_histories)
+
+            if not media_file_ids:
+                mess_list = await cls.send_default_message(user_id, message_text, markup)
+
+            elif len(media_file_ids) > 1:
+                media_group = cls.get_media_group(media_file_ids)
+                mess_list = await cls.send_media_group_message(
+                    user_id, message_text, media_group, markup
+                )
+
+            else:
+                mess_list = await cls.send_photo_message(
+                    user_id, message_text, media_file_ids[0], markup
+                )
+
+            chat_history.messages += mess_list
+            chat_histories.append(chat_history)
+
+        return chat_histories
 
     @staticmethod
     def get_media_group(file_ids):
@@ -56,38 +111,42 @@ class Messenger(BaseMessenger):
         return media_group
 
     @staticmethod
-    async def send_default_messages(data, text):
-        for user in data:
-            user_id = user['telegram_id']
+    async def send_default_message(user_id, text, markup=None):
+        try:
+            mess = await bot.send_message(user_id, text, reply_markup=markup)
+        except (ChatNotFound, BotBlocked):
+            return
 
-            try:
-                await bot.send_message(user_id, text)
-            except (ChatNotFound, BotBlocked):
-                pass
-
-        return True
+        return [mess.message_id]
 
     @staticmethod
-    async def send_media_group_messages(data, text, media_group):
-        for user in data:
-            user_id = user['telegram_id']
+    async def send_media_group_message(user_id, text, media_group, markup=None):
+        try:
+            mess_group = await bot.send_media_group(user_id, media_group)
+            mess_group = [str(mess.message_id) for mess in mess_group]
+            if markup:
+                if markup.inline_keyboard[0][0].text == 'Удалить ❌':
+                    markup.inline_keyboard[0][0].callback_data = markup.inline_keyboard[0][0].callback_data.replace('[]', ','.join(mess_group))
 
-            try:
-                await bot.send_media_group(user_id, media_group)
-                await bot.send_message(user_id, text)
-            except (ChatNotFound, BotBlocked):
-                pass
+            mess = await bot.send_message(user_id, text, reply_markup=markup)
+        except (ChatNotFound, BotBlocked):
+            return
 
-        return True
+        mess_group.append(mess.message_id)
+        return mess_group
 
     @staticmethod
-    async def send_photo_messages(data, text, file_id):
-        for user in data:
-            user_id = user['telegram_id']
+    async def send_photo_message(user_id, text, file_id, markup=None):
+        try:
+            photo_mess = await bot.send_photo(user_id, photo=file_id)
+            photo_mess = str(photo_mess.message_id)
 
-            try:
-                await bot.send_photo(user_id, photo=file_id, caption=text)
-            except (ChatNotFound, BotBlocked):
-                pass
+            if markup:
+                if markup.inline_keyboard[0][0].text == 'Удалить ❌':
+                    markup.inline_keyboard[0][0].callback_data = markup.inline_keyboard[0][0].callback_data.replace('[]', photo_mess)
 
-        return True
+            mess = await bot.send_message(user_id, text=text, reply_markup=markup)
+        except (ChatNotFound, BotBlocked):
+            return
+
+        return [photo_mess, mess.message_id]

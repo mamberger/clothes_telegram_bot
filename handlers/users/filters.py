@@ -1,9 +1,10 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery
-
-from handlers.users.mixins import mess_delete, get_queryset
-from keyboards.inline.callback_data import another_page_cd, filter_cd
+from utils.api import APIClient as API
+from handlers.users.mixins import mess_delete, get_queryset, get_item_card_markup
+from handlers.users.store import store_view
+from keyboards.inline.callback_data import another_page_cd, filter_cd, add_to_fav_cd
 from keyboards.inline.store_buttons import quality_markup, quality_cd, gender_markup, gender_cd
 from loader import dp, bot
 from utils.api import APIClient
@@ -65,7 +66,7 @@ async def gender_filter(call: CallbackQuery, callback_data: dict, state: FSMCont
 
 @dp.callback_query_handler(filter_cd.filter(model='brand'))
 @filter_value_validation
-async def category_filter(call: CallbackQuery, callback_data: dict, state: FSMContext):
+async def brand_filter(call: CallbackQuery, callback_data: dict, state: FSMContext):
     await mess_delete(state, call.from_user.id)
     state_data = await state.get_data()
 
@@ -76,3 +77,16 @@ async def category_filter(call: CallbackQuery, callback_data: dict, state: FSMCo
 
     mess = await bot.send_message(call.from_user.id, f'Выберите категорию:', reply_markup=markup)
     await state.update_data(sent_messages=[mess.message_id])
+
+
+@dp.callback_query_handler(filter_cd.filter(model='category'))
+@filter_value_validation
+async def last_filter(call: CallbackQuery, callback_data: dict, state: FSMContext):
+    await mess_delete(state, call.from_user.id)
+
+    state_data = await state.get_data()
+    filter_data = state_data['filter_params']
+
+    response = API.get_by_query_string('item/', filter_data)
+
+    await store_view(call, state, response, 1)
