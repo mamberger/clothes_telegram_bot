@@ -40,6 +40,39 @@ class AlbumMiddleware(BaseMiddleware):
             del self.album_data[message.media_group_id]
 
 
+class BaseAlbumManager:
+    @classmethod
+    def get_file_ids(cls, album) -> []:
+        raise NotImplementedError()
+
+
+class AlbumManager(BaseAlbumManager):
+    @classmethod
+    def get_file_ids(cls, album):
+        file_ids = []
+        if cls.is_album_valid(album):
+            if album:
+                for obj in album:
+                    if obj.photo:
+                        file_id = obj.photo[-1].file_id
+                    else:
+                        file_id = obj[obj.content_type].file_id
+                    try:
+                        file_ids.append(file_id)
+                    except ValueError:
+                        continue
+
+            return file_ids
+
+    @staticmethod
+    def is_album_valid(album):
+        if album:
+            for obj in album:
+                if not obj.photo:
+                    return False
+            return True
+
+
 # Запрос выборки по модели или конкретному url
 def get_queryset(model=None, custom_url=False):
     url = API_CORE
@@ -47,7 +80,6 @@ def get_queryset(model=None, custom_url=False):
         url = API_CORE + f'{model}/'
     if custom_url:
         url = custom_url
-    print(url)
     response = requests.get(url=url)
     data = response.json()
     return data
@@ -250,36 +282,3 @@ def update_telegram_text(name, content):
         if response.status_code == 201:
             return 1
     return 0
-
-
-class BaseAlbumManager:
-    @classmethod
-    def get_file_ids(cls, album) -> []:
-        raise NotImplementedError()
-
-
-class AlbumManager(BaseAlbumManager):
-    @classmethod
-    def get_file_ids(cls, album):
-        file_ids = []
-        if cls.is_album_valid(album):
-            if album:
-                for obj in album:
-                    if obj.photo:
-                        file_id = obj.photo[-1].file_id
-                    else:
-                        file_id = obj[obj.content_type].file_id
-                    try:
-                        file_ids.append(file_id)
-                    except ValueError:
-                        continue
-
-            return file_ids
-
-    @staticmethod
-    def is_album_valid(album):
-        if album:
-            for obj in album:
-                if not obj.photo:
-                    return False
-            return True
