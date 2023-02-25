@@ -37,9 +37,12 @@ class APIClient:
 
     @classmethod
     def get_by_query_string(cls, url, filter_data):
-        url += '?' + '&'.join(
-            '{}={}'.format(key, value) for key, value in filter_data.items()
-        )
+        url += '?'
+        for key, value in filter_data.items():
+            if value and value != '':
+                url += '&'.join(
+                    '{}={}'.format(key, value)
+                )
 
         return cls.get(url)
 
