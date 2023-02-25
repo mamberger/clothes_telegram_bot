@@ -61,7 +61,7 @@ async def delete_object(call: types.CallbackQuery, callback_data: dict):
     await delete_model(call, callback_data.get('pk'), callback_data.get('model'))
 
 
-@dp.callback_query_handler(text='cancel', state=states.Delete)
+@dp.callback_query_handler(text='cancel')
 async def cancel_wo_state(message: types.Message, state: FSMContext):
-    await bot.send_message(message.from_user.id, 'Вы успешно отменили процесс работы с Товаром.')
+    await bot.send_message(message.from_user.id, 'Вы успешно отменили процесс.')
     await state.reset_state()
