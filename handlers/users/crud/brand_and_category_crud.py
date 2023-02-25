@@ -26,12 +26,20 @@ async def category_crud_menu(call: CallbackQuery):
     await bot.send_message(call.from_user.id, f"Выберите операцию", reply_markup=get_crud_menu('BRAND'))
 
 
-# функция для осуществления READ операции для моделей brand и category
+# функция для осуществления READ операции для моделей
 async def read(call, model):
-    response = API.get(f'{model}/')
-    qs = response['results']
+    results = []
+    url = f'{model}/'
+    while True:
+        response = API.get(url)
+        results += response['results']
+        if response['next'] in ('', None):
+            break
+        else:
+            url = response['next'].replace(API_CORE, '')
+
     text = 'ID   Название\n'
-    for element in qs:
+    for element in results:
         text += f"{element['id']}   {element['title']}\n"
     if len(text) > 4096:
         for x in range(0, len(text), 4096):

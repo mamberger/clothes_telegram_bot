@@ -16,7 +16,7 @@ async def bot_start(message: types.Message, state: FSMContext):
     await state.update_data(sent_messages=[mess.message_id, mess.message_id - 1])
 
 
-@dp.message_handler(Command('keyboard'))
+@dp.message_handler(Command('menu'))
 async def get_main_keyboard(message: types.Message, state: FSMContext):
     await mess_delete(state, message.from_user.id)
 
