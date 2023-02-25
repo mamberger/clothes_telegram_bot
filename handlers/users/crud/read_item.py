@@ -3,6 +3,7 @@ from aiogram.dispatcher import FSMContext
 
 import states.states
 from data.config import API_CORE
+from handlers.users.crud.update_object import execute_with_saving_state_data
 from handlers.users.mixins import get_queryset
 from handlers.users.store import send_item_card
 from loader import bot, dp
@@ -21,6 +22,9 @@ async def show_item(message: types.Message, state: FSMContext):
         url = API_CORE + f'item/{pk}/'
         data = get_queryset('item', custom_url=url)
         await send_item_card(message.from_user.id, data)
-        await state.reset_state()
+        await execute_with_saving_state_data(
+            state.reset_state,
+            state
+        )
     except ValueError:
         return await bot.send_message(message.from_user.id, 'Неверный формат ID. Передайте число.')
