@@ -25,3 +25,9 @@ async def get_main_keyboard(message: types.Message, state: FSMContext):
                                   reply_markup=base_markup)
 
     await state.update_data(sent_messages=[mess.message_id, mess.message_id - 1])
+
+
+@dp.message_handler(Command('test'))
+async def kill_kb_test(message: types.Message, state: FSMContext):
+    await bot.send_message(message.from_user.id, '+')
+    await state.reset_state()
