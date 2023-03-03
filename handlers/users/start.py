@@ -13,7 +13,7 @@ async def bot_start(message: types.Message, state: FSMContext):
     mess = await bot.send_message(message.from_user.id, 'Перезапуск', reply_markup=base_markup)
     if not await state.get_data():
         API.create_telegram_user(message.from_user.id)
-    await state.update_data(sent_messages=[mess.message_id, mess.message_id - 1])
+    await state.update_data(sent_messages=[mess.message_id - 1])
 
 
 @dp.message_handler(Command('menu'))
@@ -24,10 +24,4 @@ async def get_main_keyboard(message: types.Message, state: FSMContext):
                                   'Клавиатура выдана',
                                   reply_markup=base_markup)
 
-    await state.update_data(sent_messages=[mess.message_id, mess.message_id - 1])
-
-
-@dp.message_handler(Command('test'))
-async def kill_kb_test(message: types.Message, state: FSMContext):
-    await bot.send_message(message.from_user.id, '+')
-    await state.reset_state()
+    await state.update_data(sent_messages=[mess.message_id - 1])
