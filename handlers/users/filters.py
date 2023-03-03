@@ -36,6 +36,7 @@ async def another_buttons_page_view(call: CallbackQuery, callback_data: dict,
 @dp.message_handler(text='Подобрать одежду 🌐')
 async def filter_start(message: types.Message, state: FSMContext):
     await mess_delete(state, message.from_user.id)
+    await state.reset_state()
     mess = await bot.send_message(message.from_user.id, f'Выберите качество:', reply_markup=quality_markup)
     await state.update_data(sent_messages=[mess.message_id, mess.message_id - 1])
 
