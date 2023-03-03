@@ -3,6 +3,7 @@ from aiogram import types
 from data.config import API_CORE
 from handlers.users.mixins import refactor_related_data
 from keyboards.inline.callback_data import store_nav_cd, remove_from_fav_cd, add_to_fav_cd
+from keyboards.inline.store_buttons import cancel_markup
 from loader import bot
 from utils.messenger import Messenger
 
@@ -63,7 +64,10 @@ async def get_item_card(user_id, item: dict):
                     f"{item['description']}\n\n" \
                     f"{price} ₽"
     except KeyError:
-        return await bot.send_message(user_id, "Объект не найден")
+        return await bot.send_message(
+            user_id, "Объект не найден",
+            reply_markup=cancel_markup
+        )
 
     return item_card
 

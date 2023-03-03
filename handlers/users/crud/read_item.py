@@ -6,6 +6,7 @@ from data.config import API_CORE
 from handlers.users.crud.update_object import execute_with_saving_state_data
 from handlers.users.mixins import get_queryset
 from handlers.users.store import send_item_card
+from keyboards.inline.store_buttons import cancel_markup
 from loader import bot, dp
 
 
@@ -27,4 +28,11 @@ async def show_item(message: types.Message, state: FSMContext):
             state
         )
     except ValueError:
-        return await bot.send_message(message.from_user.id, 'Неверный формат ID. Передайте число.')
+        return await bot.send_message(message.from_user.id, 'Неверный формат ID. Передайте число.',
+                                      reply_markup=cancel_markup)
+
+
+@dp.callback_query_handler(text='cancel', state=states.states.ReadItem)
+async def cancel_read_item(message: types.Message, state: FSMContext):
+    await bot.send_message(message.from_user.id, 'Вы успешно отменили процесс просмотра товара.')
+    await execute_with_saving_state_data(state.reset_state, state)
