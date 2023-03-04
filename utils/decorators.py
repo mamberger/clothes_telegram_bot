@@ -31,7 +31,8 @@ def filter_value_validation(func):
                                           'По данным фильтрам ничего не найдено. '
                                           'Выберите другой вариант на предыдущем шаге'
                                           )
-            await state.update_data(sent_messages=[mess.message_id])
+            sent_messages = [mess.message_id, mess.message_id - 1]
+            await state.update_data(sent_messages=sent_messages)
 
     # ключ фильтра не может быть известен заранее. поэтому удаляем все лишние ключи,
     # оставляя лишь ключ и значение текущего фильтра
