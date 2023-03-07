@@ -1,7 +1,7 @@
 import requests
 from aiogram.dispatcher import FSMContext
 
-from aiogram.utils.exceptions import MessageToDeleteNotFound
+from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageCantBeDeleted
 
 from data.config import API_CORE
 from keyboards.inline.callback_data import update_cd, store_nav_cd
@@ -108,12 +108,16 @@ async def get_previous_message_data(state: FSMContext):
 # Удаление сообщений
 async def mess_delete(state: FSMContext, chat_id):
     messages = await get_previous_message_data(state)
+    possible_errors = (
+        MessageToDeleteNotFound,
+        MessageCantBeDeleted,
+    )
     if not messages:
         return 0
     for message_id in messages:
         try:
             await bot.delete_message(chat_id=chat_id, message_id=message_id)
-        except MessageToDeleteNotFound:
+        except possible_errors:
             pass
     await state.update_data(sent_messages=None)
 
