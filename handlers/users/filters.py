@@ -39,7 +39,7 @@ async def filter_start(message: types.Message, state: FSMContext):
     await state.reset_state()
     text = """Выберите качество товара:
             P.S Пояснение категорий в закрепленных сообщениях"""
-    mess = await bot.send_message(message.from_user.id, f'Выберите качество:', reply_markup=quality_markup)
+    mess = await bot.send_message(message.from_user.id, text, reply_markup=quality_markup)
     await state.update_data(sent_messages=[mess.message_id, mess.message_id - 1])
 
 
