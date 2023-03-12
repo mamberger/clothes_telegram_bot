@@ -37,8 +37,7 @@ async def another_buttons_page_view(call: CallbackQuery, callback_data: dict,
 async def filter_start(message: types.Message, state: FSMContext):
     await mess_delete(state, message.from_user.id)
     await state.reset_state()
-    text = """Выберите качество товара:
-            P.S Пояснение категорий в закрепленных сообщениях"""
+    text = """Выберите качество товара:\nP.S Пояснение категорий в закрепленных сообщениях"""
     mess = await bot.send_message(message.from_user.id, text, reply_markup=quality_markup)
     await state.update_data(sent_messages=[mess.message_id, mess.message_id - 1])
 
