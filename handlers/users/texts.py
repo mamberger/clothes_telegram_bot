@@ -41,7 +41,9 @@ async def texts_menu(call: types.CallbackQuery):
             [types.InlineKeyboardButton(text='FAQ',
                                         callback_data=texts_cd.new(text='faq'))],
             [types.InlineKeyboardButton(text='Связь',
-                                        callback_data=texts_cd.new(text='contacts'))]
+                                        callback_data=texts_cd.new(text='contacts'))],
+            [types.InlineKeyboardButton(text='Приветствие',
+                                        callback_data=texts_cd.new(text='start'))],
         ]
     )
     await bot.send_message(call.from_user.id, 'Это меню редактирования текстов.', reply_markup=markup)
