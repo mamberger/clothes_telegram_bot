@@ -1,6 +1,6 @@
 from aiogram import types
 from aiogram.utils.exceptions import ChatNotFound, BotBlocked
-
+from keyboards.default.client_base import base_markup
 from loader import bot
 from utils.api import APIClient
 
@@ -127,7 +127,8 @@ class Messenger(BaseMessenger):
             if markup:
                 if markup.inline_keyboard[0][0].text == 'Удалить ❌':
                     markup.inline_keyboard[0][0].callback_data = markup.inline_keyboard[0][0].callback_data.replace('[]', ','.join(mess_group))
-
+            else:
+                markup = base_markup
             mess = await bot.send_message(user_id, text, reply_markup=markup)
         except (ChatNotFound, BotBlocked):
             return
@@ -144,7 +145,8 @@ class Messenger(BaseMessenger):
             if markup:
                 if markup.inline_keyboard[0][0].text == 'Удалить ❌':
                     markup.inline_keyboard[0][0].callback_data = markup.inline_keyboard[0][0].callback_data.replace('[]', photo_mess)
-
+            else:
+                markup = base_markup
             mess = await bot.send_message(user_id, text=text, reply_markup=markup)
         except (ChatNotFound, BotBlocked):
             return
