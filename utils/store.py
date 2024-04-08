@@ -60,7 +60,7 @@ async def get_item_card(user_id, item: dict):
                     f"Пол: {item['gender']}\n" \
                     f"Качество: {item['quality']}\n" \
                     f"Категория: {refactor_related_data(item['category'])}\n" \
-                    f"Брэнд: {refactor_related_data(item['brand'])}\n\n" \
+                    f"Бренд: {refactor_related_data(item['brand'])}\n\n" \
                     f"{item['description']}\n\n" \
                     f"{price} ₽"
     except KeyError:
