@@ -182,7 +182,7 @@ async def get_preview_data(state):
                f"Пол: {gender}\n" \
                f"Качество: {quality}\n" \
                f"Категория: {categories_string}\n" \
-               f"Брэнд: {brands_string}\n\n" \
+               f"Бренд: {brands_string}\n\n" \
                f"{data['description']}\n\n" \
                f"{data['price']} ₽"
 
