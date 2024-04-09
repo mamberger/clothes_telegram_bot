@@ -12,7 +12,7 @@ lk_markup.row(crud).row(team, texts).row(message)
 
 # CRUD menu
 category = InlineKeyboardButton(text='Категория', callback_data='CATEGORY')
-brand = InlineKeyboardButton(text='Брэнд', callback_data="BRAND")
+brand = InlineKeyboardButton(text='Бренд', callback_data="BRAND")
 item = InlineKeyboardButton(text='Товар', callback_data='ITEM')
 
 crud_markup = InlineKeyboardMarkup()
